@@ -121,25 +121,63 @@ impl CatalogRuntime {
     /// Health belongs to the exact source and consent that were actually read.
     /// A new selection/configuration cannot inherit another probe's readiness.
     pub async fn observation(&self) -> Option<ModuleObservation> {
-        self.identity
+        let absent = |reason: &'static str| {
+            tracing::info!(
+                event.name = "gds.diagnostic.observation.absent",
+                module = "gds",
+                reason
+            );
+            None
+        };
+        if self
+            .identity
             .check_captured_local_use_lifetime(&self.authority)
-            .ok()?;
-        let source = self.vault.github_source().await.ok()?;
-        let consent = self.vault.module_configuration("gds").await.ok()?;
-        self.identity
+            .is_err()
+        {
+            return absent("authority_before");
+        }
+        let source = match self.vault.github_source().await {
+            Ok(value) => value,
+            Err(_) => return absent("source_unavailable"),
+        };
+        let consent = match self.vault.module_configuration("gds").await {
+            Ok(value) => value,
+            Err(_) => return absent("consent_unavailable"),
+        };
+        if self
+            .identity
             .check_captured_local_use_lifetime(&self.authority)
-            .ok()?;
-        if source.conflicted || source.selection.is_none() || consent.conflicted {
-            return None;
+            .is_err()
+        {
+            return absent("authority_after");
+        }
+        if source.conflicted {
+            return absent("source_conflict");
+        }
+        if source.selection.is_none() {
+            return absent("source_absent");
+        }
+        if consent.conflicted {
+            return absent("consent_conflict");
         }
         let epoch = (source.operation_id, consent.operation_id);
-        self.shared
+        let stored = self
+            .shared
             .observation
             .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .as_ref()
-            .filter(|observation| observation.epoch == epoch)
-            .map(|observation| observation.value.clone())
+            .unwrap_or_else(|error| error.into_inner());
+        let Some(observed) = stored.as_ref() else {
+            return absent("unobserved");
+        };
+        if observed.epoch != epoch {
+            return absent("epoch_changed");
+        }
+        tracing::info!(
+            event.name = "gds.diagnostic.observation.present",
+            module = "gds",
+            has_error = observed.value.error.is_some()
+        );
+        Some(observed.value.clone())
     }
     async fn collect_page(&self) -> Result<bool, view::GithubCatalogError> {
         use nddev_device_sync_accounts::runtime::Instant;

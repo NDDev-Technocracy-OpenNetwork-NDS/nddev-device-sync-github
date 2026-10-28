@@ -436,6 +436,15 @@ impl ReadGithubCatalogPage for CatalogPort {
         {
             self.guard.module.observe(&result);
         }
+        tracing::info!(
+            event.name = "gds.diagnostic.observation.record",
+            module = "gds",
+            guard_failed = guard_error
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .is_some(),
+            module_cancelled = self.guard.module.lifetime.is_cancelled()
+        );
         result.map_err(|error| {
             guard_error
                 .lock()
