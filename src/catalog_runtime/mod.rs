@@ -58,9 +58,321 @@ pub(super) struct CatalogResources {
     admission: Arc<tokio::sync::Semaphore>,
     cache: Arc<crate::github::CatalogCache>,
     commits: Mutex<sync_state::CommitState>,
+    #[cfg(not(target_arch = "wasm32"))]
+    ignored: crate::ignore::Source,
     #[cfg(all(test, target_os = "linux", feature = "commit-sync"))]
     fixture: Mutex<Option<Arc<fleet_acceptance::FixtureIo>>>,
 }
+
+/// The owner's ignored GitHub accounts for one operation (github#137). Browsers have no
+/// host list yet and include every account.
+pub(super) struct IgnoreSnapshot(
+    #[cfg(not(target_arch = "wasm32"))] crate::ignore::IgnoredAccounts,
+);
+impl IgnoreSnapshot {
+    /// Whether the account is ignored. A saved owner may lack its login; a login-only entry then
+    /// cannot match and only a pinned id decides.
+    /// Keeps the repositories whose owner is not ignored.
+    pub(super) fn retain_included(
+        &self,
+        repositories: &mut Vec<nddev_device_sync_domain::repositories::catalog::RepositorySummary>,
+    ) {
+        repositories.retain(|repository| {
+            !self.ignores(repository.owner.id.value(), Some(&repository.owner.login))
+                && !self.ignores_repository(
+                    repository.id.value(),
+                    Some(&repository.owner.login),
+                    &repository.name,
+                )
+        });
+    }
+
+    /// Whether the repository itself is on the list; [`Self::ignores`] covers its owner.
+    pub(super) fn ignores_repository(&self, id: u64, owner: Option<&str>, name: &str) -> bool {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            use crate::ignore::Decision;
+            let full_name = owner.map(|owner| format!("{owner}/{name}"));
+            let decision = self.0.decide_repository(id, full_name.as_deref());
+            if decision == Decision::IgnoredRenamed {
+                tracing::warn!(
+                    event.name = "github.catalog.repository.renamed",
+                    module = "github",
+                    error.type = "ignored_repository_renamed",
+                    outcome = "rejected"
+                );
+            }
+            decision.ignored()
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            let _ = (id, owner, name);
+            false
+        }
+    }
+
+    pub(super) fn ignores(&self, id: u64, login: Option<&str>) -> bool {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            use crate::ignore::Decision;
+            let decision = match login {
+                Some(login) => self.0.decide(id, login),
+                None => self.0.decide(id, ""),
+            };
+            if decision == Decision::IgnoredRenamed {
+                tracing::warn!(
+                    event.name = "github.catalog.account.renamed",
+                    module = "github",
+                    error.type = "ignored_owner_renamed",
+                    outcome = "rejected"
+                );
+            }
+            decision.ignored()
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            let _ = (id, login);
+            false
+        }
+    }
+}
+impl CatalogResources {
+    pub(super) fn ignore_snapshot(&self) -> Result<IgnoreSnapshot, view::GithubCatalogError> {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            self.ignored
+                .current()
+                .map(IgnoreSnapshot)
+                .map_err(|_| view::GithubCatalogError::IgnoreListInvalid)
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            Ok(IgnoreSnapshot())
+        }
+    }
+
+    /// Refuses an operation on a repository whose owner the host ignores.
+    pub(super) fn refuse_ignored(
+        &self,
+        location: &nddev_device_sync_domain::repositories::workspace::CheckoutLocation,
+    ) -> Result<(), view::GithubCatalogError> {
+        let snapshot = self.ignore_snapshot()?;
+        if snapshot.ignores(location.owner_id.value(), Some(location.owner())) {
+            return Err(view::GithubCatalogError::AccountIgnored);
+        }
+        if snapshot.ignores_repository(
+            location.repository_id.value(),
+            Some(location.owner()),
+            location.repository(),
+        ) {
+            return Err(view::GithubCatalogError::RepositoryIgnored);
+        }
+        Ok(())
+    }
+}
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod ignore_tests {
+    use super::*;
+    use nddev_device_sync_domain::repositories::{catalog::*, workspace::CheckoutLocation};
+
+    const LIST: &str = "schema_version: 1\nexcluded_accounts:\n  - login: \"mysummit-school\"\n    provider: \"github\"\n    kind: \"organization\"\n    reason: \"owner decision\"\n";
+
+    fn resources(path: &std::path::Path) -> CatalogResources {
+        CatalogResources {
+            observation: Arc::default(),
+            admission: Arc::new(tokio::sync::Semaphore::new(1)),
+            cache: Arc::default(),
+            commits: Mutex::default(),
+            ignored: crate::ignore::Source::at(Some(path.to_owned())),
+            #[cfg(all(test, target_os = "linux", feature = "commit-sync"))]
+            fixture: Mutex::default(),
+        }
+    }
+
+    fn repository(id: u64, owner_id: u64, login: &str) -> RepositorySummary {
+        RepositorySummary {
+            id: RepositoryId::new(id).unwrap(),
+            owner: GithubOwner {
+                id: GithubAccountId::new(owner_id).unwrap(),
+                kind: GithubOwnerKind::Organization,
+                login: login.into(),
+            },
+            name: format!("repo{id}"),
+            visibility: RepositoryVisibility::Private,
+            archived: false,
+            default_branch: Some("main".into()),
+        }
+    }
+
+    fn location(owner_id: u64, login: &str) -> CheckoutLocation {
+        CheckoutLocation::new(
+            RepositoryId::new(9).unwrap(),
+            GithubAccountId::new(owner_id).unwrap(),
+            login.into(),
+            "repo".into(),
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn an_ignored_organization_is_never_discovered_connected_or_synchronized() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join(crate::ignore::FILE_NAME);
+        let shared = resources(&path);
+        let mut page = vec![
+            repository(1, 10, "nddev"),
+            repository(2, 20, "MySummit-School"),
+        ];
+        std::fs::write(&path, LIST).unwrap();
+        shared.ignore_snapshot().unwrap().retain_included(&mut page);
+        assert_eq!(page.iter().map(|r| r.id.value()).collect::<Vec<_>>(), [1]);
+        assert_eq!(
+            shared.refuse_ignored(&location(20, "mysummit-school")),
+            Err(view::GithubCatalogError::AccountIgnored)
+        );
+        assert_eq!(shared.refuse_ignored(&location(10, "nddev")), Ok(()));
+        // Removing the login restores the normal path on the next operation.
+        std::fs::write(&path, "schema_version: 1\nexcluded_accounts: []\n").unwrap();
+        let mut page = vec![
+            repository(1, 10, "nddev"),
+            repository(2, 20, "mysummit-school"),
+        ];
+        shared.ignore_snapshot().unwrap().retain_included(&mut page);
+        assert_eq!(page.len(), 2);
+        assert_eq!(
+            shared.refuse_ignored(&location(20, "mysummit-school")),
+            Ok(())
+        );
+    }
+
+    #[test]
+    fn an_ignored_repository_is_dropped_refused_and_marked_while_its_owner_stays() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join(crate::ignore::FILE_NAME);
+        std::fs::write(
+            &path,
+            "schema_version: 1\nexcluded_repositories:\n  - repository: \"nddev/old-site\"\n    provider: \"github\"\n    reason: \"retired\"\n",
+        )
+        .unwrap();
+        let shared = resources(&path);
+        let mut page = vec![repository(1, 10, "nddev"), repository(2, 10, "nddev")];
+        page[1].name = "Old-Site".into();
+        shared.ignore_snapshot().unwrap().retain_included(&mut page);
+        assert_eq!(page.iter().map(|r| r.id.value()).collect::<Vec<_>>(), [1]);
+        let site = CheckoutLocation::new(
+            RepositoryId::new(2).unwrap(),
+            GithubAccountId::new(10).unwrap(),
+            "nddev".into(),
+            "old-site".into(),
+        )
+        .unwrap();
+        assert_eq!(
+            shared.refuse_ignored(&site),
+            Err(view::GithubCatalogError::RepositoryIgnored)
+        );
+        assert_eq!(shared.refuse_ignored(&location(10, "nddev")), Ok(()));
+        let snapshot = shared.ignore_snapshot().unwrap();
+        assert!(snapshot.ignores_repository(2, Some("nddev"), "old-site"));
+        assert!(!snapshot.ignores(10, Some("nddev")));
+        assert_eq!(
+            driver::caller_error(&view::GithubCatalogError::RepositoryIgnored).0,
+            "repository_ignored"
+        );
+    }
+
+    #[test]
+    fn an_unreadable_list_refuses_instead_of_including() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join(crate::ignore::FILE_NAME);
+        let shared = resources(&path);
+        assert!(
+            shared.ignore_snapshot().is_ok(),
+            "an absent list ignores nothing"
+        );
+        std::fs::write(
+            &path,
+            "schema_version: 1\nexcluded_accounts:\n  - login: x\n",
+        )
+        .unwrap();
+        assert!(matches!(
+            shared.ignore_snapshot(),
+            Err(view::GithubCatalogError::IgnoreListInvalid)
+        ));
+        assert_eq!(
+            shared.refuse_ignored(&location(10, "nddev")),
+            Err(view::GithubCatalogError::IgnoreListInvalid)
+        );
+        assert_eq!(
+            driver::caller_error(&view::GithubCatalogError::IgnoreListInvalid).0,
+            "ignore_list_invalid"
+        );
+        assert_eq!(
+            driver::caller_error(&view::GithubCatalogError::AccountIgnored).0,
+            "account_ignored"
+        );
+    }
+
+    #[test]
+    fn saved_data_of_an_ignored_owner_stays_and_is_marked() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join(crate::ignore::FILE_NAME);
+        std::fs::write(&path, LIST).unwrap();
+        let snapshot = resources(&path).ignore_snapshot().unwrap();
+        use nddev_device_sync_domain::repositories::catalog::observations::{
+            RepositoryFact, TargetVersion,
+            projection::{SavedOwner, SavedRepository, SavedRepositoryGroup},
+        };
+        let version = TargetVersion {
+            revision: 3,
+            next_base: 3,
+            pending_id: None,
+            conflicted: false,
+        };
+        let group = |owner_id: u64, login: Option<&str>| SavedRepositoryGroup {
+            owner_id: GithubAccountId::new(owner_id).unwrap(),
+            owner: login.map(|login| SavedOwner {
+                owner: repository(1, owner_id, login).owner,
+                version: version.clone(),
+                observed_at_ms: 5,
+            }),
+            repositories: vec![SavedRepository {
+                repository: RepositoryFact::from_summary(&repository(owner_id + 1, owner_id, "x"))
+                    .unwrap(),
+                version: version.clone(),
+                observed_at_ms: 5,
+            }],
+        };
+        let view = view::project_saved_page(
+            vec![
+                group(10, Some("nddev")),
+                group(20, Some("mysummit-school")),
+                group(30, None),
+            ],
+            1,
+            1,
+            false,
+            |id, login| snapshot.ignores(id, login),
+            |id, owner, name| snapshot.ignores_repository(id, owner, name),
+        );
+        let marked = view
+            .groups
+            .iter()
+            .map(|g| (g.owner_id.as_str(), g.ignored, g.repositories.len()))
+            .collect::<Vec<_>>();
+        // Saved data stays; only the ignored owner is marked. Without a saved
+        // owner login only a pinned id can decide.
+        assert_eq!(
+            marked,
+            [("10", false, 1), ("20", true, 1), ("30", false, 1)]
+        );
+        assert!(
+            view.groups
+                .iter()
+                .all(|g| g.repositories.iter().all(|r| !r.ignored))
+        );
+    }
+}
+
 struct WorkSchedule {
     epoch: Option<(Option<String>, Option<String>)>,
     next: Option<nddev_device_sync_accounts::runtime::Instant>,
@@ -76,6 +388,8 @@ impl CatalogRuntime {
             admission,
             cache,
             commits: Mutex::default(),
+            #[cfg(not(target_arch = "wasm32"))]
+            ignored: crate::ignore::Source::host_default(),
             #[cfg(all(test, target_os = "linux", feature = "commit-sync"))]
             fixture: Mutex::default(),
         });
