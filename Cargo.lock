@@ -2883,7 +2883,7 @@ checksum = "743fb55ba31b18fb1ecef6bdc9aa2743314978ac084044301a7eee33fb99a20d"
 [[package]]
 name = "nddev-device-sync-accounts"
 version = "0.0.1-alpha.24"
-source = "git+https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-accounts?rev=dcd6d41f57fce22ad4974578899598e138d98abc#dcd6d41f57fce22ad4974578899598e138d98abc"
+source = "git+https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-accounts?rev=fb335edf5f78651fb2916f6fb63004c9628eb87d#fb335edf5f78651fb2916f6fb63004c9628eb87d"
 dependencies = [
  "android-native-keyring-store",
  "apple-native-keyring-store",
@@ -3045,7 +3045,7 @@ dependencies = [
 [[package]]
 name = "nddev-device-sync-vault"
 version = "0.0.1-alpha.12"
-source = "git+https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-vault?rev=2db5564bb5e555ddcf90f39135a0d0a5cf3b4923#2db5564bb5e555ddcf90f39135a0d0a5cf3b4923"
+source = "git+https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-vault?rev=c057d04b084b38a0fcb4ea9d5188aa179eed1251#c057d04b084b38a0fcb4ea9d5188aa179eed1251"
 dependencies = [
  "base16ct",
  "base64 0.23.1",
