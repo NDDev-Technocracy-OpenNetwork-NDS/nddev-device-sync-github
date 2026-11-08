@@ -19,7 +19,10 @@ do not imply runtime support.
 capability handles share a bounded agent admission budget. Worker responses,
 private paths and content are never Debug or telemetry payloads.
 
-Run `just check` and `just provider-check`. Linux acceptance starts the actual
+Run build-free `just check` for formatting, dependency license/source policy and
+unused dependencies. Run `just test` on an execution host for the Python artifact
+harness, all-target/all-feature Clippy and all-feature Rust tests, then the
+affected acceptance recipes such as `just provider-check`. Linux acceptance starts the actual
 Rust worker against isolated Git fixtures and verifies dirty/index/ref
 preservation, incomplete submodule reads, allocation bounds and cancellation.
 There is no backup/recovery implementation or private estate configuration.
