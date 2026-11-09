@@ -26,7 +26,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Install pinned Rust toolchain
-        run: rustup toolchain install 1.99.1 --profile minimal
+        uses: NDDev-Technocracy-OpenNetwork/nddev-ci/actions/hosted-sdk@52d8302d2272967a21fd8e3ae594205588648777 # v0.6.28
+        with:
+          rust-version: '1.99.1'
       - name: Restore the Cargo dependency and tool cache
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
