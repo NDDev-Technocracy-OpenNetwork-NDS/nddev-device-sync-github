@@ -43,11 +43,11 @@ tokio = { version = "1.53", features = ["time"], optional = true }
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 tsify = { version = "=0.5.8", default-features = false, features = ["js"], optional = true }
 uuid = { version = "1.27", features = ["js"], optional = true }
-wasm-bindgen = { version = "=0.2.129", optional = true }
-wasm-bindgen-futures = { version = "=0.4.79", optional = true }
-js-sys = { version = "=0.3.106", optional = true }
+wasm-bindgen = { version = "=0.2.130", optional = true }
+wasm-bindgen-futures = { version = "=0.4.80", optional = true }
+js-sys = { version = "=0.3.107", optional = true }
 gloo-timers = { version = "0.4", features = ["futures"], optional = true }
-web-sys = { version = "=0.3.106", features = ["Window", "Request", "RequestInit", "RequestMode", "RequestCredentials", "RequestRedirect", "RequestCache", "ReferrerPolicy", "Headers", "Response", "AbortController", "AbortSignal", "ReadableStream", "ReadableStreamDefaultReader"], optional = true }
+web-sys = { version = "=0.3.107", features = ["Window", "Request", "RequestInit", "RequestMode", "RequestCredentials", "RequestRedirect", "RequestCache", "ReferrerPolicy", "Headers", "Response", "AbortController", "AbortSignal", "ReadableStream", "ReadableStreamDefaultReader"], optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 gix = { version = "=0.89.0", default-features = false, features = ["status", "revision", "sha1"] }
@@ -72,4 +72,4 @@ nddev-device-sync-vault = { git = "https://github.com/NDDev-Technocracy-OpenNetw
 unsafe_code = "forbid"
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
-wasm-bindgen-test = "=0.3.79"
+wasm-bindgen-test = "=0.3.80"
