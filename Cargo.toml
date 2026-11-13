@@ -50,7 +50,7 @@ gloo-timers = { version = "0.4", features = ["futures"], optional = true }
 web-sys = { version = "=0.3.106", features = ["Window", "Request", "RequestInit", "RequestMode", "RequestCredentials", "RequestRedirect", "RequestCache", "ReferrerPolicy", "Headers", "Response", "AbortController", "AbortSignal", "ReadableStream", "ReadableStreamDefaultReader"], optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-gix = { version = "=0.89.0", default-features = false, features = ["status", "revision", "sha1"] }
+gix = { version = "=0.90.0", default-features = false, features = ["status", "revision", "sha1"] }
 rustix = { version = "1.1", features = ["process", "fs"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
