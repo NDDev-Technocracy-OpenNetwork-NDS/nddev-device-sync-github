@@ -16,8 +16,8 @@ commit-sync = ["dep:base64", "dep:zeroize", "dep:tokio", "dep:tokio-util", "dep:
 github-catalog = ["dep:zeroize", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:url", "dep:nddev-device-sync-telemetry", "dep:reqwest", "dep:rustls", "dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:js-sys", "dep:gloo-timers", "dep:web-sys"]
 
 [dependencies]
-nddev-device-sync-accounts = { git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-accounts", rev = "3bd0c8d4d8b9ad29816ef24b22f1451f1a0f3adc", optional = true }
-nddev-device-sync-vault = { git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-vault", rev = "a8d87b731958dbdcb59ab64fc1830ce7fc8b521c", optional = true }
+nddev-device-sync-accounts = { git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-accounts", rev = "95fa88b20e027f8b0fc62b33f8e5a02672dc4a7c", optional = true }
+nddev-device-sync-vault = { git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-vault", rev = "f7ce0a95498291787d0d2f8df7181f4159c3fc74", optional = true }
 uuid = { version = "1.27", features = ["v4"], optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -27,7 +27,7 @@ tokio = { version = "1.53", features = ["macros", "sync"], optional = true }
 tokio-util = { version = "0.7", features = ["rt"], optional = true }
 tracing = { version = "0.1", optional = true }
 url = { version = "2.5", optional = true }
-nddev-device-sync-telemetry = { version = "=0.0.1-alpha.11", git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-observability", rev = "98f8a98cd6d9c2e679a5cc566de9a4128dbb34f6", optional = true }
+nddev-device-sync-telemetry = { version = "=0.0.1-alpha.11", git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-observability", rev = "c942a9ec95b11824d86e9842d2c0e3be340f3728", optional = true }
 nddev-device-sync-domain = { version = "=0.0.12", git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-core.git", rev = "ad614122d5916accbe1cca198768968b8c5bad0e" }
 nddev-device-sync-application = { version = "=0.0.1-alpha.21", git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-core.git", rev = "ad614122d5916accbe1cca198768968b8c5bad0e" }
 
@@ -43,11 +43,11 @@ tokio = { version = "1.53", features = ["time"], optional = true }
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 tsify = { version = "=0.5.8", default-features = false, features = ["js"], optional = true }
 uuid = { version = "1.27", features = ["js"], optional = true }
-wasm-bindgen = { version = "=0.2.129", optional = true }
-wasm-bindgen-futures = { version = "=0.4.79", optional = true }
-js-sys = { version = "=0.3.106", optional = true }
+wasm-bindgen = { version = "=0.2.130", optional = true }
+wasm-bindgen-futures = { version = "=0.4.80", optional = true }
+js-sys = { version = "=0.3.107", optional = true }
 gloo-timers = { version = "0.4", features = ["futures"], optional = true }
-web-sys = { version = "=0.3.106", features = ["Window", "Request", "RequestInit", "RequestMode", "RequestCredentials", "RequestRedirect", "RequestCache", "ReferrerPolicy", "Headers", "Response", "AbortController", "AbortSignal", "ReadableStream", "ReadableStreamDefaultReader"], optional = true }
+web-sys = { version = "=0.3.107", features = ["Window", "Request", "RequestInit", "RequestMode", "RequestCredentials", "RequestRedirect", "RequestCache", "ReferrerPolicy", "Headers", "Response", "AbortController", "AbortSignal", "ReadableStream", "ReadableStreamDefaultReader"], optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 gix = { version = "=0.89.0", default-features = false, features = ["status", "revision", "sha1"] }
@@ -65,11 +65,11 @@ tempfile = "3"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "time", "net", "io-util", "signal"] }
 
 [target.'cfg(target_os = "linux")'.dev-dependencies]
-nddev-device-sync-accounts = { git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-accounts", rev = "3bd0c8d4d8b9ad29816ef24b22f1451f1a0f3adc", features = ["development-http"] }
-nddev-device-sync-vault = { git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-vault", rev = "a8d87b731958dbdcb59ab64fc1830ce7fc8b521c", features = ["development-http"] }
+nddev-device-sync-accounts = { git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-accounts", rev = "95fa88b20e027f8b0fc62b33f8e5a02672dc4a7c", features = ["development-http"] }
+nddev-device-sync-vault = { git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-vault", rev = "f7ce0a95498291787d0d2f8df7181f4159c3fc74", features = ["development-http"] }
 
 [lints.rust]
 unsafe_code = "forbid"
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
-wasm-bindgen-test = "=0.3.79"
+wasm-bindgen-test = "=0.3.80"
