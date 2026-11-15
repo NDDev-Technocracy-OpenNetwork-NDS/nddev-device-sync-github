@@ -109,8 +109,7 @@ async fn worker_returns_unknown_evidence_and_preserves_index() {
     );
 }
 
-#[tokio::test]
-async fn submodule_partial_read_cannot_produce_complete_parent_status() {
+fn rename_budget_parent() -> tempfile::TempDir {
     let source = fixture();
     for i in 0..201 {
         std::fs::write(
@@ -171,6 +170,20 @@ async fn submodule_partial_read_cannot_produce_complete_parent_status() {
         .unwrap();
     }
     git(&child, &["add", "-A"]);
+    parent
+}
+
+#[tokio::test]
+async fn submodule_partial_read_cannot_produce_complete_parent_status() {
+    let parent = rename_budget_parent();
+    let config_paths = [
+        parent.path().join(".git/config"),
+        parent.path().join(".git/modules/logical-name/config"),
+    ];
+    let configs: Vec<_> = config_paths
+        .iter()
+        .map(|path| std::fs::read(path).unwrap())
+        .collect();
     let parent_index = std::fs::read(parent.path().join(".git/index")).unwrap();
     let raw = reader(Duration::from_secs(12))
         .read_git_status(parent.path(), CancellationToken::new())
@@ -187,6 +200,41 @@ async fn submodule_partial_read_cannot_produce_complete_parent_status() {
         std::fs::read(parent.path().join(".git/index")).unwrap(),
         parent_index
     );
+    for (path, before) in config_paths.iter().zip(configs) {
+        assert_eq!(std::fs::read(path).unwrap(), before);
+    }
+}
+
+#[tokio::test]
+async fn explicit_submodule_rename_modes_remain_read_only() {
+    for (key, value, partial) in [
+        ("diff.renames", "false", false),
+        ("status.renames", "false", false),
+        ("diff.renames", "copies", true),
+    ] {
+        let parent = rename_budget_parent();
+        let child = parent.path().join("vendor/dependency");
+        git(&child, &["config", key, value]);
+        let git_dir = PathBuf::from(git(&child, &["rev-parse", "--absolute-git-dir"]));
+        let config = std::fs::read(git_dir.join("config")).unwrap();
+        let index = std::fs::read(git_dir.join("index")).unwrap();
+        let raw = reader(Duration::from_secs(12))
+            .read_git_status(parent.path(), CancellationToken::new())
+            .await
+            .unwrap();
+        assert_eq!(
+            raw.partial_reasons.contains(&PartialReason::RenameBudget),
+            partial,
+            "{key}={value}"
+        );
+        let view = reader(Duration::from_secs(12))
+            .status(parent.path(), CancellationToken::new())
+            .await
+            .unwrap();
+        assert_eq!(view.status.is_none(), partial, "{key}={value}");
+        assert_eq!(std::fs::read(git_dir.join("config")).unwrap(), config);
+        assert_eq!(std::fs::read(git_dir.join("index")).unwrap(), index);
+    }
 }
 
 #[tokio::test]

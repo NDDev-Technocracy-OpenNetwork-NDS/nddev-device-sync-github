@@ -167,7 +167,7 @@ pub(super) fn inspect(
 }
 
 fn inspect_repo(
-    repo: gix::Repository,
+    mut repo: gix::Repository,
     limits: &Limits,
     cancelled: Arc<AtomicBool>,
     nesting: usize,
@@ -176,6 +176,20 @@ fn inspect_repo(
     guard(limits, &cancelled)?;
     if nesting > limits.depth {
         return Err(ModuleError::InvalidResponse);
+    }
+    // Materialize Git's enabled rename default in memory. Without an explicit
+    // switch, gix 0.90's fallback replaces configured limits with its defaults.
+    // Keep repository-specific disabled/copy modes and our recursive work cap.
+    let default_renames = {
+        let config = repo.config_snapshot();
+        config.string("status.renames").is_none() && config.string("diff.renames").is_none()
+    };
+    if default_renames {
+        let mut config = repo.config_snapshot_mut();
+        config
+            .set_value(&gix::config::tree::Diff::RENAMES, "true")
+            .map_err(|_| ModuleError::InvalidContract)?;
+        config.commit().map_err(|_| ModuleError::InvalidContract)?;
     }
     let root = repo
         .workdir()

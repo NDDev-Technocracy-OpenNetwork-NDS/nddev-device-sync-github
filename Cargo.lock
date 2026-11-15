@@ -1364,7 +1364,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7518b930f6aeb75e871d32ce873c2ae46e35cef19b5a0b039d4337f651d897cd"
 dependencies = [
  "bstr",
- "hashbrown 0.17.1",
+ "hashbrown 0.16.1",
 ]
 
 [[package]]
@@ -2833,7 +2833,7 @@ dependencies = [
 [[package]]
 name = "nddev-device-sync-vault"
 version = "0.0.1-alpha.12"
-source = "git+https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-vault?rev=bb7f1b1bac8bbd8a8d3e9a6f42b2c41fb8e2ab45#bb7f1b1bac8bbd8a8d3e9a6f42b2c41fb8e2ab45"
+source = "git+https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-vault?rev=60418c907f56b4bdf5a97f68ecd84b2ea753db62#60418c907f56b4bdf5a97f68ecd84b2ea753db62"
 dependencies = [
  "base16ct",
  "base64 0.23.1",
