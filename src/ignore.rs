@@ -310,11 +310,11 @@ mod tests {
 
 # Accounts the authenticated identity can reach but the estate must never register.
 excluded_accounts:
-  - login: "mysummit-school"
+  - login: "excluded-org"
     provider: "github"
     kind: "organization"
     reason: >-
-      A colleague's project.
+      Excluded by the configured policy.
     decided_by: "owner"
     decided_at: "2026-09-11"
     extended_at: "2026-10-31"
@@ -355,7 +355,7 @@ excluded_repositories:
     #[test]
     fn the_estate_list_ignores_by_login_case_insensitively_and_by_pinned_id() {
         let list = IgnoredAccounts::parse(ESTATE).unwrap();
-        assert_eq!(list.decide(7, "mysummit-school"), Decision::Ignored);
+        assert_eq!(list.decide(7, "excluded-org"), Decision::Ignored);
         assert_eq!(list.decide(8, "nddev-IT-com"), Decision::Ignored);
         assert_eq!(list.decide(9, "nddev"), Decision::Included);
         // A pinned id follows the account through a rename, and its old login
