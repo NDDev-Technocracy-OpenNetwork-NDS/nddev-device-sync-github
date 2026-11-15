@@ -1,9 +1,18 @@
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
+# Build-free source policy. Execution belongs in the recipes below.
 check:
+    just --fmt --check
+    cargo fmt --all --check
+    cargo deny --frozen --all-features check licenses sources
+    cargo shear --frozen --deny-warnings
+
+# Execution host or runner only; retain the complete harness and feature checks.
+test:
     python3 -B -m unittest discover -s scripts -p 'test_*.py'
-    cargo fmt -- --check
+    cargo clippy --locked --workspace --all-targets -- -D warnings
     cargo clippy --locked --all-targets --all-features -- -D warnings
+    cargo test --locked --workspace
     cargo test --locked --all-features
 
 provider-check:
@@ -20,21 +29,13 @@ commit-check:
 github-negative-check:
     cargo test --locked --features github-catalog --test github_provider -- --ignored
 
-# The checks the former CI library ran from .github/nddev-ci.toml; CI calls them through
-# `just test` on a pull request and `just verify` on dev.
-test:
-    cargo clippy --locked --workspace --all-targets -- -D warnings
-    cargo test --locked --workspace
-
 ci-extras:
-    python3 -B -m unittest discover -s scripts -p 'test_*.py'
     cargo audit --deny warnings
     cargo test --locked --features github-catalog
-    cargo test --locked --all-features
     cargo check --locked --lib --features browser-bindings --target wasm32-unknown-unknown
 
 ci-policy:
-    cargo deny --locked check licenses sources
+    cargo deny --frozen --all-features check licenses sources
 
 ci-build:
     cargo build --locked --workspace --release
@@ -42,7 +43,6 @@ ci-build:
 verify:
     just check
     just test
-    just ci-policy
     just ci-extras
     just ci-build
 
@@ -50,3 +50,4 @@ verify:
 # before the checks (setup: true).
 setup:
     if [ "${GITHUB_ACTIONS:-}" = true ] && [ "${RUNNER_ENVIRONMENT:-}" = github-hosted ]; then sudo apt-get update -qq && sudo apt-get install -qq --no-install-recommends -y libsecret-1-dev pkg-config; fi
+    cargo fetch --locked
