@@ -49,5 +49,12 @@ verify:
 # GitHub's runners lack the credential-store build inputs this workspace links; CI runs this
 # before the checks (setup: true).
 setup:
-    if [ "${GITHUB_ACTIONS:-}" = true ] && [ "${RUNNER_ENVIRONMENT:-}" = github-hosted ]; then sudo apt-get update -qq && sudo apt-get install -qq --no-install-recommends -y libsecret-1-dev pkg-config; fi
+    if [ "${GITHUB_ACTIONS:-}" = true ] && [ "${RUNNER_ENVIRONMENT:-}" = github-hosted ] && [ "${RUNNER_OS:-Linux}" = Linux ]; then sudo apt-get update -qq && sudo apt-get install -qq --no-install-recommends -y libsecret-1-dev pkg-config; fi
     cargo fetch --locked
+
+# Preserve the default-feature platform floor and the macOS commit adapter.
+native-check:
+    cargo fmt --all --check
+    cargo clippy --locked --workspace --all-targets -- -D warnings
+    cargo test --locked --workspace
+    if [ "$(uname -s)" = Darwin ]; then cargo clippy --locked --all-targets --features commit-sync -- -D warnings && cargo test --locked --features commit-sync --lib commits::tests -- --test-threads=2; fi

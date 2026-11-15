@@ -268,3 +268,13 @@ run, and each round verifies the expected existing commit and dirty refusal.
 Historical test coverage is separate from each repository's latest outcome.
 
 Release journals live in [GitHub Releases](https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-github/releases).
+
+## CI coverage
+
+The shared library runs the project checks and default/all-feature tests on pull
+requests. Development and manual runs retain the browser compile, advisory and
+release gates and add the native Ubuntu 26.04, macOS 15 and Windows 2025 matrix.
+The platform recipe preserves default-feature Clippy/tests plus the macOS
+commit-sync lint and ownership/preservation tests. Windows 2025 replaces the old
+provider label and requires a successful real run. The Linux release keeps its
+Ubuntu 24.04 ABI baseline. Owned provider/backend acceptance remains explicit.
