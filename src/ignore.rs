@@ -418,7 +418,7 @@ excluded_repositories:
         assert!(source.current().unwrap().is_empty());
         std::fs::write(&path, ESTATE).unwrap();
         assert_eq!(
-            source.current().unwrap().decide(1, "MySummit-School"),
+            source.current().unwrap().decide(1, "Excluded-Org"),
             Decision::Ignored
         );
         std::fs::write(&path, "schema_version: [").unwrap();

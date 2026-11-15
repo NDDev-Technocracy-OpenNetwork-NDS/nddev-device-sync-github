@@ -221,7 +221,7 @@ mod ignore_tests {
         let shared = resources(&path);
         let mut page = vec![
             repository(1, 10, "nddev"),
-            repository(2, 20, "MySummit-School"),
+            repository(2, 20, "Excluded-Org"),
         ];
         std::fs::write(&path, LIST).unwrap();
         shared.ignore_snapshot().unwrap().retain_included(&mut page);
