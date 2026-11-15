@@ -278,3 +278,7 @@ The platform recipe preserves default-feature Clippy/tests plus the macOS
 commit-sync lint and ownership/preservation tests. Windows 2025 replaces the old
 provider label and requires a successful real run. The Linux release keeps its
 Ubuntu 24.04 ABI baseline. Owned provider/backend acceptance remains explicit.
+
+After the complete same-repository development workflow succeeds, promotion
+advances main with the repository's isolated promotion key. The project's
+existing release and deployment commands keep their own lifecycle.
