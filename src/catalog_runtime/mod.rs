@@ -175,7 +175,7 @@ mod ignore_tests {
     use super::*;
     use nddev_device_sync_domain::repositories::{catalog::*, workspace::CheckoutLocation};
 
-    const LIST: &str = "schema_version: 1\nexcluded_accounts:\n  - login: \"mysummit-school\"\n    provider: \"github\"\n    kind: \"organization\"\n    reason: \"owner decision\"\n";
+    const LIST: &str = "schema_version: 1\nexcluded_accounts:\n  - login: \"excluded-org\"\n    provider: \"github\"\n    kind: \"organization\"\n    reason: \"owner decision\"\n";
 
     fn resources(path: &std::path::Path) -> CatalogResources {
         CatalogResources {
@@ -221,13 +221,13 @@ mod ignore_tests {
         let shared = resources(&path);
         let mut page = vec![
             repository(1, 10, "nddev"),
-            repository(2, 20, "MySummit-School"),
+            repository(2, 20, "Excluded-Org"),
         ];
         std::fs::write(&path, LIST).unwrap();
         shared.ignore_snapshot().unwrap().retain_included(&mut page);
         assert_eq!(page.iter().map(|r| r.id.value()).collect::<Vec<_>>(), [1]);
         assert_eq!(
-            shared.refuse_ignored(&location(20, "mysummit-school")),
+            shared.refuse_ignored(&location(20, "excluded-org")),
             Err(view::GithubCatalogError::AccountIgnored)
         );
         assert_eq!(shared.refuse_ignored(&location(10, "nddev")), Ok(()));
@@ -235,14 +235,11 @@ mod ignore_tests {
         std::fs::write(&path, "schema_version: 1\nexcluded_accounts: []\n").unwrap();
         let mut page = vec![
             repository(1, 10, "nddev"),
-            repository(2, 20, "mysummit-school"),
+            repository(2, 20, "excluded-org"),
         ];
         shared.ignore_snapshot().unwrap().retain_included(&mut page);
         assert_eq!(page.len(), 2);
-        assert_eq!(
-            shared.refuse_ignored(&location(20, "mysummit-school")),
-            Ok(())
-        );
+        assert_eq!(shared.refuse_ignored(&location(20, "excluded-org")), Ok(()));
     }
 
     #[test]
@@ -345,7 +342,7 @@ mod ignore_tests {
         let view = view::project_saved_page(
             vec![
                 group(10, Some("nddev")),
-                group(20, Some("mysummit-school")),
+                group(20, Some("excluded-org")),
                 group(30, None),
             ],
             1,
