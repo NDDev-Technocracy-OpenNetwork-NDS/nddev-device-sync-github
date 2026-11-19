@@ -16,8 +16,8 @@ commit-sync = ["dep:base64", "dep:zeroize", "dep:tokio", "dep:tokio-util", "dep:
 github-catalog = ["dep:zeroize", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:url", "dep:nddev-device-sync-telemetry", "dep:reqwest", "dep:rustls", "dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:js-sys", "dep:gloo-timers", "dep:web-sys"]
 
 [dependencies]
-nddev-device-sync-accounts = { git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-accounts", rev = "1e65cfb2e03459f3ae4cab92f6a036dd53e2f77c", optional = true }
-nddev-device-sync-vault = { git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-vault", rev = "60418c907f56b4bdf5a97f68ecd84b2ea753db62", optional = true }
+nddev-device-sync-accounts = { git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-accounts", rev = "d0f04dc184f04388afd7f1bdd7383194181af01e", optional = true }
+nddev-device-sync-vault = { git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-vault", rev = "946d298fb06548cf4150eebbc1183347c8e84321", optional = true }
 uuid = { version = "1.27", features = ["v4"], optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -27,7 +27,7 @@ tokio = { version = "1.53", features = ["macros", "sync"], optional = true }
 tokio-util = { version = "0.7", features = ["rt"], optional = true }
 tracing = { version = "0.1", optional = true }
 url = { version = "2.5", optional = true }
-nddev-device-sync-telemetry = { version = "=0.0.1-alpha.11", git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-observability", rev = "c942a9ec95b11824d86e9842d2c0e3be340f3728", optional = true }
+nddev-device-sync-telemetry = { version = "=0.0.1-alpha.11", git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-observability", rev = "4f8c36ec4d54f1560ad39fc28b1f95c6bf763727", optional = true }
 nddev-device-sync-domain = { version = "=0.0.12", git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-core.git", rev = "ad614122d5916accbe1cca198768968b8c5bad0e" }
 nddev-device-sync-application = { version = "=0.0.1-alpha.21", git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-core.git", rev = "ad614122d5916accbe1cca198768968b8c5bad0e" }
 
@@ -50,7 +50,7 @@ gloo-timers = { version = "0.4", features = ["futures"], optional = true }
 web-sys = { version = "=0.3.107", features = ["Window", "Request", "RequestInit", "RequestMode", "RequestCredentials", "RequestRedirect", "RequestCache", "ReferrerPolicy", "Headers", "Response", "AbortController", "AbortSignal", "ReadableStream", "ReadableStreamDefaultReader"], optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-gix = { version = "=0.90.0", default-features = false, features = ["status", "revision", "sha1"] }
+gix = { git = "https://github.com/GitoxideLabs/gitoxide", rev = "945b52aa300665c69f0be80f8ae941505f2128b3", version = "=0.90.0", default-features = false, features = ["status", "revision", "sha1"] }
 rustix = { version = "1.1", features = ["process", "fs"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
@@ -65,8 +65,8 @@ tempfile = "3"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "time", "net", "io-util", "signal"] }
 
 [target.'cfg(target_os = "linux")'.dev-dependencies]
-nddev-device-sync-accounts = { git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-accounts", rev = "1e65cfb2e03459f3ae4cab92f6a036dd53e2f77c", features = ["development-http"] }
-nddev-device-sync-vault = { git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-vault", rev = "60418c907f56b4bdf5a97f68ecd84b2ea753db62", features = ["development-http"] }
+nddev-device-sync-accounts = { git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-accounts", rev = "d0f04dc184f04388afd7f1bdd7383194181af01e", features = ["development-http"] }
+nddev-device-sync-vault = { git = "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-vault", rev = "946d298fb06548cf4150eebbc1183347c8e84321", features = ["development-http"] }
 
 [lints.rust]
 unsafe_code = "forbid"

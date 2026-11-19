@@ -9,7 +9,8 @@ wildcards = "deny"
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"
-allow-git = ["https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-accounts", "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-protocol.git", "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-vault", "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-agent", "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-core.git", "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-observability"]
+required-git-spec = "rev"
+allow-git = ["https://github.com/GitoxideLabs/gitoxide", "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-accounts", "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-protocol.git", "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-vault", "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-agent", "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-core.git", "https://github.com/NDDev-Technocracy-OpenNetwork-NDS/nddev-device-sync-observability"]
 
 # Permissive build-time target detection, scoped to the locked package.
 [[licenses.exceptions]]
